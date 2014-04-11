@@ -1,0 +1,33 @@
+--- apport-unpack.orig	2014-04-11 14:30:25.552677138 +0200
++++ apport-unpack	2014-04-11 15:03:35.116728081 +0200
+@@ -50,17 +50,29 @@
+     fatal(str(e))
+ 
+ pr = problem_report.ProblemReport()
++compressed_value = problem_report.CompressedValue()
++binary_type = True
++
++with open(report,'rb') as f:
++    pr.load(f, binary=False)
++    for k in pr:
++        if k == 'VmCore':
++            binary_type = 'compressed'
++            break
++
+ if report == '-':
+     pr.load(sys.stdin)
+ else:
+     try:
+         with open(report, 'rb') as f:
+-            pr.load(f)
++            pr.load(f, binary = binary_type)
+     except IOError as e:
+         fatal(str(e))
+ for k in pr:
+     with open(os.path.join(dir, k), 'wb') as f:
+         if type(pr[k]) == t_str:
+             f.write(pr[k].encode('UTF-8'))
++        elif isinstance(pr[k], problem_report.CompressedValue):
++            pr[k].write(f)
+         else:
+             f.write(pr[k])
